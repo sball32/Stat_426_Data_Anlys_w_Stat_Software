@@ -1,0 +1,220 @@
+Thursday, January 30, 2025 at 1:28:12 PM EST
+SET AUTORECOVERY=ON Small=0.0001 THREADS=AUTO SIGLESS=YES DIGITGROUPING=No LEADZERO=No.
+Thursday, January 30, 2025 at 9:49:20 PM EST
+GET
+  FILE='C:\Users\sb3218a\OneDrive - american.edu\Desktop\SPSS_Ecdat_Wages_data.sav'.
+DATASET NAME DataSet1 WINDOW=FRONT.
+Monday, February 3, 2025 at 12:58:46 PM EST
+GET
+  FILE='C:\Users\sb3218a\OneDrive - american.edu\Desktop\SPSS_Ecdat_Wages_data.sav'.
+DATASET NAME DataSet1 WINDOW=FRONT.
+NEW FILE.
+DATASET CLOSE ALL.
+GET FILE='C:\Users\sb3218a\OneDrive - american.edu\Desktop\SPSS_Ecdat_Wages_data.sav'.
+DATASET NAME DataSet1.
+DATASET ACTIVATE DataSet1 WINDOW=FRONT.
+RESTORE.
+DESCRIPTIVES VARIABLES=med iq kww year age age80 school school80 expr expr80 tenure tenure80 lw lw80
+  /STATISTICS=MEAN STDDEV MIN MAX.
+BAYES ONESAMPLE
+  /MISSING SCOPE=ANALYSIS
+  /CRITERIA CILEVEL=95
+  /INFERENCE DISTRIBUTION=NORMAL VARIABLES=iq kww lw ANALYSIS=POSTERIOR
+  /PRIOR VARDIST=DIFFUSE MEANDIST=DIFFUSE.
+SORT CASES  BY MartialStatus.
+SPLIT FILE LAYERED BY MartialStatus.
+BAYES ONESAMPLE
+  /MISSING SCOPE=ANALYSIS
+  /CRITERIA CILEVEL=95
+  /INFERENCE DISTRIBUTION=NORMAL VARIABLES=lw ANALYSIS=POSTERIOR
+  /PRIOR VARDIST=DIFFUSE MEANDIST=DIFFUSE.
+SORT CASES  BY MaritalStatusNew.
+SPLIT FILE LAYERED BY MaritalStatusNew.
+BAYES ONESAMPLE
+  /MISSING SCOPE=ANALYSIS
+  /CRITERIA CILEVEL=95
+  /INFERENCE DISTRIBUTION=NORMAL VARIABLES=lw80 ANALYSIS=POSTERIOR
+  /PRIOR VARDIST=DIFFUSE MEANDIST=DIFFUSE.
+SPLIT FILE OFF.
+EXAMINE VARIABLES=lw BY MartialStatus
+  /PLOT=BOXPLOT
+  /STATISTICS=NONE
+  /NOTOTAL.
+*>Text: MartialStatus Command: EXAMINE
+*>This procedure cannot use string variables longer than 8 bytes.  The values
+*>will be truncated.
+EXAMINE VARIABLES=iq BY ResidencyEarly
+  /PLOT=BOXPLOT
+  /STATISTICS=NONE
+  /NOTOTAL.
+*>Text: ResidencyEarly Command: EXAMINE
+*>This procedure cannot use string variables longer than 8 bytes.  The values
+*>will be truncated.
+EXAMINE VARIABLES=iq BY CityResidency
+  /PLOT=BOXPLOT
+  /STATISTICS=NONE
+  /NOTOTAL.
+*>Text: CityResidency Command: EXAMINE
+*>This procedure cannot use string variables longer than 8 bytes.  The values
+*>will be truncated.
+PPLOT
+  /VARIABLES=lw
+  /NOLOG
+  /NOSTANDARDIZE
+  /TYPE=Q-Q
+  /FRACTION=BLOM
+  /TIES=MEAN
+  /DIST=NORMAL.
+PPLOT
+  /VARIABLES=school expr tenure
+  /NOLOG
+  /NOSTANDARDIZE
+  /TYPE=Q-Q
+  /FRACTION=BLOM
+  /TIES=MEAN
+  /DIST=NORMAL.
+FREQUENCIES VARIABLES=MartialStatus MaritalStatusNew
+  /ORDER=ANALYSIS.
+GRAPH
+  /PIE=PCT BY MartialStatus.
+OMS /SELECT ALL /DESTINATION VIEWER=NO /TAG = 'AR_839547'.
+DATASET ACTIVATE DataSet1 WINDOW=ASIS.
+XSAVE OUTFILE='C:\Users\sb3218a\AppData\Roaming\IBM\SPSS Statistics\one\autoRecovery\recover14364\documents\dataset0.sav'.
+EXE.
+OMSEND TAG = 'AR_839547'.
+RESTORE.
+DATASET ACTIVATE DataSet1 WINDOW=ASIS.
+RESTORE.
+T-TEST GROUPS=MartialStatus('Married ' 'No tMarried ')
+  /MISSING=ANALYSIS
+  /VARIABLES=lw
+  /ES DISPLAY(TRUE)
+  /CRITERIA=CI(.95).
+T-TEST GROUPS=MartialStatus('MaritalStatus ' 'MaritalStatus New')
+  /MISSING=ANALYSIS
+  /VARIABLES=lw
+  /ES DISPLAY(TRUE)
+  /CRITERIA=CI(.95).
+T-TEST GROUPS=MartialStatus('Married' 'non Married')
+  /MISSING=ANALYSIS
+  /VARIABLES=lw
+  /ES DISPLAY(TRUE)
+  /CRITERIA=CI(.95).
+T-TEST GROUPS=MartialStatus('Married' 'not Married')
+  /MISSING=ANALYSIS
+  /VARIABLES=lw
+  /ES DISPLAY(TRUE)
+  /CRITERIA=CI(.95).
+T-TEST GROUPS=ResidencyEarly('Southern' 'nonSouthern')
+  /MISSING=ANALYSIS
+  /VARIABLES=lw
+  /ES DISPLAY(TRUE)
+  /CRITERIA=CI(.95).
+CORRELATIONS
+  /VARIABLES=iq lw
+  /PRINT=TWOTAIL NOSIG FULL
+  /MISSING=PAIRWISE.
+SORT CASES  BY MartialStatus.
+SPLIT FILE LAYERED BY MartialStatus.
+CORRELATIONS
+  /VARIABLES=iq lw
+  /PRINT=TWOTAIL NOSIG FULL
+  /MISSING=PAIRWISE.
+OMS /SELECT ALL /DESTINATION VIEWER=NO /TAG = 'AR_839547'.
+DATASET ACTIVATE DataSet1 WINDOW=ASIS.
+XSAVE OUTFILE='C:\Users\sb3218a\AppData\Roaming\IBM\SPSS Statistics\one\autoRecovery\recover14364\documents\dataset1.sav'.
+EXE.
+OMSEND TAG = 'AR_839547'.
+RESTORE.
+DATASET ACTIVATE DataSet1 WINDOW=ASIS.
+RESTORE.
+GRAPH
+  /SCATTERPLOT(BIVAR)=lw WITH iq
+  /MISSING=LISTWISE.
+*>Warning # 17862
+*>There are not enough cases with valid values available for GRAPH to process.
+SPLIT FILE OFF.
+GRAPH
+  /SCATTERPLOT(BIVAR)=lw WITH iq
+  /MISSING=LISTWISE.
+GRAPH
+  /SCATTERPLOT(BIVAR)=lw WITH school
+  /MISSING=LISTWISE.
+GRAPH
+  /SCATTERPLOT(BIVAR)=lw WITH iq BY MartialStatus
+  /MISSING=LISTWISE.
+GRAPH
+  /SCATTERPLOT(BIVAR)=lw80 WITH iq BY MaritalStatusNew
+  /MISSING=LISTWISE.
+CROSSTABS
+  /TABLES=ResidencyEarly BY Residency1980
+  /FORMAT=AVALUE TABLES
+  /STATISTICS=CHISQ CORR
+  /CELLS=COUNT EXPECTED
+  /COUNT ROUND CELL.
+GRAPH
+  /PIE=PCT BY ResidencyEarly
+  /PANEL COLVAR=MaritalStatusNew COLOP=CROSS.
+GRAPH
+  /BAR(GROUPED)=COUNT BY MartialStatus BY MaritalStatusNew.
+GRAPH
+  /BAR(GROUPED)=COUNT BY MartialStatus BY ResidencyEarly.
+UNIANOVA lw BY MartialStatus
+  /METHOD=SSTYPE(3)
+  /INTERCEPT=INCLUDE
+  /POSTHOC=MartialStatus(TUKEY BONFERRONI)
+  /PRINT ETASQ HOMOGENEITY
+  /CRITERIA=ALPHA(.05)
+  /DESIGN=MartialStatus.
+EXAMINE VARIABLES=iq BY CityResidency
+  /PLOT=BOXPLOT
+  /STATISTICS=NONE
+  /NOTOTAL.
+*>Text: CityResidency Command: EXAMINE
+*>This procedure cannot use string variables longer than 8 bytes.  The values
+*>will be truncated.
+EXAMINE VARIABLES=lw80 BY CityResidency1980
+  /PLOT=BOXPLOT
+  /STATISTICS=NONE
+  /NOTOTAL.
+*>Text: CityResidency1980 Command: EXAMINE
+*>This procedure cannot use string variables longer than 8 bytes.  The values
+*>will be truncated.
+GRAPH
+  /HISTOGRAM=lw
+  /PANEL ROWVAR=CityResidency ResidencyEarly ROWOP=CROSS.
+GRAPH
+  /HISTOGRAM=lw
+  /PANEL ROWVAR=ResidencyEarly ROWOP=CROSS.
+GRAPH
+  /HISTOGRAM=lw
+  /PANEL ROWVAR=CityResidency ROWOP=CROSS.
+Thursday, February 6, 2025 at 1:06:06 PM EST
+NEW FILE.
+DATASET CLOSE ALL.
+NEW FILE.
+DATA LIST FREE /q8j3kf9q.
+BEGIN DATA.
+1
+END DATA.
+MATCH FILES /FILE=*
+  /FILE='C:\Users\sb3218a\AppData\Roaming\IBM\SPSS Statistics\one\autoRecovery\recover14364\documents\dataset6.sav'.
+CACHE.
+EXE.
+EXE.
+DELETE VARIABLES q8j3kf9q.
+DATASET NAME DataSet3.
+NEW FILE.
+DATA LIST FREE /q8j3kf9q.
+BEGIN DATA.
+1
+END DATA.
+MATCH FILES /FILE=*
+  /FILE='C:\Users\sb3218a\AppData\Roaming\IBM\SPSS Statistics\one\autoRecovery\recover14364\documents\dataset2.sav'.
+CACHE.
+EXE.
+EXE.
+DELETE VARIABLES q8j3kf9q.
+DATASET NAME DataSet1.
+DATASET ACTIVATE DataSet3 WINDOW=FRONT.
+RESTORE.

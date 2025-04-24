@@ -1,0 +1,389 @@
+---
+title: "Stat426_FinalProject"
+author: "Sydney Ball"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3    
+    toc_float: true
+---
+
+# Data426: Ecdat Wages Final Project
+
+## Library
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(gridExtra)
+```
+
+## Data
+
+| Ecdat Griliches Wage :: <https://vincentarelbundock.github.io/Rdatasets/datasets.html>
+
+```{r}
+wages_ecdat <- read.csv("~/Desktop/stat 426/Wages Ecdat.csv", header=TRUE)
+```
+
+## Initial Exploration
+
+-   Rns: residency in the southern states (first observation)
+
+-   Rns80: same variable for 1980
+
+-   Mrt: married (first observation)
+
+-   Mrt80: same variable for 1980
+
+-   Smsa: residency in metropolitan areas (first observation)
+
+-   Smsa80: same variable for 1980
+
+-   Med: mother's education in years
+
+-   Iq: IQ score
+
+-   Kww: score on the "knowledge of the world of work" test
+
+-   Year: year of the observation
+
+-   Age: age (first observation)
+
+-   Age80: same variable for 1980
+
+-   School: completed years of schooling (first observation)
+
+-   School80: same variable for 1980
+
+-   Expr: experience in years (first observation)
+
+-   Expr80: same variable for 1980
+
+-   Tenure: tenure in years (first observation)
+
+-   Tenure80: same variable for 1980
+
+-   Lw: log wage (first observation)
+
+-   Lw80: same variable for 1980
+
+The dataset was drawn from the **National Longitudinal Survey of Youth in 1979**. It was a long running survey, which began in 1979, and it was sponsored by the **Bureau of Labor Statistics**. The original survey came from **1966 at ages 14-24, with 5,225 respondents**. The second major way of resurvey came in **1980**, which is where many of the secondary variables come from. 
+
+This design was used by Blackburn and Neumark to get a cleaner sample of **working-age males in civilian jobs**, which makes it easier to study wage differences **without military or schooling-related distortions**. There was no gender or race component to this data (which is important when exploring the limitations of this study).
+
+| **Article:** <https://scholarcommons.sc.edu/cgi/viewcontent.cgi?article=1016&context=econ_facpub>
+| **Source:** Blackburn, M. and Neumark D. (1992) "Unobserved ability, efficiency wages, and interindustry wage differentials", *Quarterly Journal of Economics*, **107**, 1421-1436.
+
+```{r}
+glimpse(wages_ecdat)
+dim(wages_ecdat)
+```
+
+## Re-code variables:
+
+```{r}
+#Re-code all the variables into something more explanatory
+wages_ecdat$rns[wages_ecdat$rns == "yes"] <- "Southerner"
+wages_ecdat$rns[wages_ecdat$rns == "no"] <- "Not Southerner"
+
+wages_ecdat$rns80[wages_ecdat$rns80=="yes"]<-"Southerner"
+wages_ecdat$rns80[wages_ecdat$rns80=="no"]<-"Not Southerner"
+
+wages_ecdat$mrt[wages_ecdat$mrt=="yes"]<-'Married'
+wages_ecdat$mrt[wages_ecdat$mrt=="no"]<-'Not Married'
+
+wages_ecdat$mrt80[wages_ecdat$mrt80=="yes"]<-'Married'
+wages_ecdat$mrt80[wages_ecdat$mrt80=="no"]<-'Not Married'
+
+wages_ecdat$smsa[wages_ecdat$smsa=="yes"]<-'Metro Resident'
+wages_ecdat$smsa[wages_ecdat$smsa=="no"]<-'Not Metro Resident'
+
+wages_ecdat$smsa80[wages_ecdat$smsa80=="yes"]<-'Metro Resident'
+wages_ecdat$smsa80[wages_ecdat$smsa80=="no"]<-'Not Metro Resident'
+
+head(wages_ecdat)
+```
+
+## Re-code Variable Names:
+
+```{r}
+new_wages_ecdat <- wages_ecdat |>
+  mutate("Southern Resident" = rns,
+         "1980 Southern Resident" = rns80,
+         "Marital Status" = mrt,
+         "1980 Marital Status" = mrt80,
+         "Metro Resident" = smsa,
+         "1980 Metro Resident" = smsa80)
+
+#get rid of the repeat colums and only keep the transformed columns
+wages_ecdat_tidy <- new_wages_ecdat |>
+  select("med", "iq", "kww", "year", "age", "age80", "school", "school80", "expr", "expr80", "tenure", "tenure80", "lw", "lw80", `Southern Resident`, `1980 Southern Resident`, `Marital Status`, `1980 Marital Status`,`Metro Resident`, `1980 Metro Resident`)
+
+glimpse(wages_ecdat_tidy)
+```
+
+### Basic Summary Stats
+
+```{r}
+summary(wages_ecdat_tidy)
+summary(wages_ecdat_tidy$lw)
+sd(wages_ecdat_tidy$lw)
+```
+
+### Split the data by marital status
+
+```{r}
+#Create subsets: 
+married_people <- wages_ecdat_tidy[wages_ecdat_tidy$`Marital Status`
+                                   =="Married",]
+not_Married_people <- wages_ecdat_tidy[wages_ecdat_tidy$`Marital Status`
+                                       =="Not Married",]
+
+#Split Married people in 1980 sample 
+married_people1980 <- wages_ecdat_tidy[wages_ecdat_tidy$`1980 Marital Status`
+                                   =="Married new",]
+not_Married_people1980 <- wages_ecdat_tidy[wages_ecdat_tidy$`1980 Marital Status`
+                                       =="Not Married new",]
+```
+
+## Basic Skills:
+
+### 1. Bar-plot of year of observation
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(x = year)) +
+  geom_bar(fill = "navy") +
+  geom_text(stat = "count", 
+            aes(label = ..count..), 
+            vjust = -0.3, 
+            color = "black") +
+  theme_minimal() +
+  labs(
+    title = "Distribution of Survey Year",
+    x = "Year",
+    y = "Count"
+  )
+```
+
+### 2a. Boxplot logWages split by Martial Status
+
+```{r}
+range_lw <- range(wages_ecdat_tidy$lw, wages_ecdat_tidy$lw80, na.rm = TRUE)
+```
+
+```{r}
+box_married <- ggplot(wages_ecdat_tidy, aes(x = lw, y = `Marital Status`)) +
+  geom_boxplot(color = "blue", fill = "navy") +
+  scale_x_continuous(limits = range_lw) +
+  theme_minimal() +
+  labs(title = "Difference in Wages by Marital Status", x = "LogWages")
+```
+
+### 2b. Boxplot logWages split by Martial Status in 1980
+
+```{r}
+box_married_1980 <- ggplot(wages_ecdat_tidy, aes(x = lw80, y = `1980 Marital Status`)) +
+  geom_boxplot(color = "blue", fill = "navy") +
+  scale_x_continuous(limits = range_lw) +
+  theme_minimal() +
+  labs(title = "Difference in Wages by Marital Status in 1980", x = "LogWages")
+```
+
+```{r}
+grid.arrange(box_married, box_married_1980, nrow = 2) #same scale
+```
+
+### 3a. ANOVA for Wages determined by Marital Status
+
+```{r}
+anova_model1 <- aov(lw ~ `Marital Status`, data = wages_ecdat_tidy)
+summary(anova_model1)
+```
+
+| This ANOVA output table shows a very small p-value (near 0), highlighting that this a statistically significant difference between the wages of people who are married and those who are not married.
+| This table suggests **that married people make more money that people who are not married**.
+
+### 3b. ANOVA for Wages determined by Marital Status in 1980
+
+```{r}
+anova_model2 <- aov(lw80 ~ `1980 Marital Status`, data = wages_ecdat_tidy)
+summary(anova_model2)
+```
+
+| I wanted to check and see if the initial significance of difference in wages based on marital status carried on into the 1980s, and yes, it seems it did. Once again there is a very small p-value suggesting that there is a statistically significant difference in wages in the 1980s. Once again, this table suggests **that people who are married make more money than those who are not married.**
+
+### 4. Using the ANOVA above, do a T-test
+
+```{r}
+#ANOVA:
+results <- aov(lw~`Marital Status`, data = wages_ecdat_tidy)
+summary(results)
+```
+
+| There is a statistically significant difference in logWages between marital status groups ("Married" vs. "Not Married"); this difference is shown by the very small p-value of \<2-16e, which is less than .05. **Marital status is significantly associated with differences in wages in my dataset.**
+
+```{r}
+#Ttest:
+t.test(lw ~ `Marital Status`, data = wages_ecdat_tidy)
+```
+
+| This output further demonstrates the mean difference in logWages between people who are Married and those who are not Married. We see that the mean logWage for people who are **Married is 5.81** and the mean for people who are **not Married is 5.55**. This difference in mean logWages was statistically significant at the .05 level.
+
+### 5. QQplot of IQ
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(sample =iq)) +
+  stat_qq() +
+  stat_qq_line(color = "blue", linewidth = 1) +
+  labs(title = "Q-Q Plot of IQ") +
+  theme_minimal()
+
+```
+
+| This qq-plot demonstrates that the distribution of IQs from the data is **generally normal**, these people are no more or less intelligent than a normal sample would expect.
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(x = iq)) +
+  geom_histogram(fill = "navy", color = "blue") +
+  theme_minimal() +
+  labs(x = "IQ",
+       y = "Count",
+       title = "Historgram of IQ Distribution")
+```
+
+| This histogram, confirms what the QQ-plot demonstrated. We see a generally **normal distribution for IQ** in this data.
+
+### 6. Scatterplot of School and School in 1980
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(x = school, y = school80)) +
+  geom_point(color = "blue") +
+  geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed") +
+  labs(
+    title = "Schooling Over Span of Survey",
+    x = "Years of Schooling (Inital Observation)",
+    y = "Years of Schooling (1980 Observation)"
+  ) +
+  theme_minimal()
+```
+
+| This plot demonstrates that people often only increased their years of schooling. This rationally makes sense because once a person has a degree they never loose the degree, they can only become more education.
+
+## Upper level skill:
+
+### 1a. Scatterplot of IQ vs logWages Split by Martial Status
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(x = iq, y = lw, color = `Marital Status`)) +
+  geom_point() +
+  labs(
+    title = "IQ vs. lnWages by Marital Status",
+    x = "IQ",
+    y = "lnWages",
+    color = "Marital Status"
+  ) +
+  theme_minimal() +
+    scale_color_manual(values = c("Married" = "blue", "Not Married" = "lightsalmon"))
+```
+
+### 1b. Scatterplot of IQ vs logWages Split by Martial Status in 1980
+
+```{r}
+ggplot(wages_ecdat_tidy, aes(x = iq, y = lw80, color = `1980 Marital Status`)) +
+  geom_point() +
+  labs(
+    title = "IQ vs. ln Wages by Marital Status in 1980",
+    x = "IQ",
+    y = "lnWages from 1980",
+    color = "Marital Status in 1980"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("Married" = "blue", "Not Married" = "lightsalmon"))
+```
+
+### 2. Chi-Square of Residential Location
+
+#### Part A. Metro Resident
+
+```{r}
+smsa_table <- table(wages_ecdat_tidy$`Metro Resident`, wages_ecdat_tidy$`1980 Metro Resident`)
+print(smsa_table)
+chisq.test(smsa_table)
+```
+
+```{r}
+smsa_df <- as.data.frame(smsa_table)
+colnames(smsa_df) <- c("smsa", "smsa_1980", "count")
+
+# Plot
+ggplot(smsa_df, aes(x = smsa, y = smsa_1980, fill = count)) +
+  geom_tile() +
+  geom_text(aes(label = count), color = "white") +
+  labs(title = "Movement Between Metro Residence Types (Inital Obs. to 1980)",
+       x = "Inital Obs. Metro Resience", y = "1980 Metro Residence") +
+  scale_fill_viridis_c()
+
+```
+
+| The Chi-squared test of independence showed a significant relationship between Metro status in the initial observation and the 1980 observation (χ²(1) = 328.62, p \< .001), suggesting **that individuals were much more likely to remain in the same type of location (metro)** over the duration of the survey.
+
+#### Part B. Southern Resident
+
+```{r}
+rns_table <- table(wages_ecdat_tidy$`Southern Resident`, wages_ecdat_tidy$`1980 Southern Resident`)
+print(rns_table)
+chisq.test(rns_table)
+```
+
+```{r}
+rns_df <- as.data.frame(rns_table)
+colnames(smsa_df) <- c("rns", "rns_1980", "count")
+
+# Plot
+ggplot(smsa_df, aes(x = rns, y = rns_1980, fill = count)) +
+  geom_tile() +
+  geom_text(aes(label = count), color = "white") +
+  labs(title = "Movement Between Southern Residence Types (Inital Obs. to 1980)",
+       x = "Inital Obs. Southern Residence", y = "1980 Southern Residence") +
+  scale_fill_viridis_c()
+```
+
+| As we expected given the output for Metro residence, the Chi-squared tests for independence showed a significant relationship between Southern Residence status in the initial observation and the 1980 observation (χ²(1) = 504.03, p \< .001), suggesting **that individuals were much more likely to remain in the same type of location (southern)** over the duration of the survey.
+
+### 3a. Simple Linear Regression:
+
+```{r}
+wage_model <- lm(lw ~ school + expr, data = wages_ecdat_tidy)
+summary(wage_model)
+```
+
+This regression shows that only about 29.79% of variation in logWages can be explained by the model controlling for **school/education** and **experience**. This model suggests a poor fit for explanation of wages.
+
+### 3b. Stepwise Linear Regression:
+
+```{r include=FALSE}
+intercept_only <- lm(lw ~ 1, data=wages_ecdat_tidy)
+intercept_only
+
+all <- lm(lw ~ ., data=wages_ecdat_tidy)
+all
+
+forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
+forward
+
+forward$anova
+```
+
+```{r}
+wages_model3 <- lm(lw ~ age + lw80 + year + `Southern Resident` + `Metro Resident` + `Marital Status` + iq + tenure + kww, data = wages_ecdat_tidy)
+summary(wages_model3)
+```
+
+| Running a simple linear regression on logWages, we see differing evidence that there are stronger linear relationships within variables in the dataset than the Efficiency wages paper may have originally found. **Simply controlling for schooling and experience on wages is not sufficient enough**. Other variables such as residential location and IQ may contribute significantly to the findings of efficiency wages.
+
+## Conclusion:
+
+| **Research Question:** Do inter-industry wage differentials reflect unobserved worker ability, or do they result from industry-specific factors like efficiency wages or rent-sharing?
+| 
+| My data lacked a specific industry variable that was heavily discussed in the paper. What I can conclude from my findings is something similar that the Efficient Wages paper did find: simply using education/schooling and experience do not fully explain wage difference. While the Wages paper was inter-industry related, my analysis supports that there are other influencing factors to wages, such as marital status and residential location that will influence a workers wage.
